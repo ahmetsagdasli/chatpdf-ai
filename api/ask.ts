@@ -1,22 +1,18 @@
-// api/ask.ts  (Vercel Serverless Function - Node.js 20)
-import type { VercelRequest, VercelResponse } from '@vercel/node';
+// api/ask.ts  – Vercel Serverless Function (typesız, her yerde çalışır)
 
 const MAX_CONTEXT_CHARS = 120_000;
 
-// Basit CORS (yerelde farklı origin kullanırsan işine yarar; aynı origin'de zaten sorun yok)
-function setCors(res: VercelResponse) {
+// Basit CORS (farklı origin’de gerekebilir)
+function setCors(res: any) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 }
 
-export default async function handler(req: VercelRequest, res: VercelResponse) {
+export default async function handler(req: any, res: any) {
   setCors(res);
 
-  if (req.method === 'OPTIONS') {
-    return res.status(200).end();
-  }
-
+  if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'POST') {
     res.setHeader('Allow', 'POST, OPTIONS');
     return res.status(405).json({ error: 'Method Not Allowed' });
@@ -28,7 +24,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(500).json({ error: 'Server misconfig: GEMINI_API_KEY missing' });
     }
 
-    // Body hem string hem object gelebilir; ikisini de destekleyelim
     const body = typeof req.body === 'string' ? JSON.parse(req.body || '{}') : (req.body || {});
     const { pdfText, question, docName } = body;
 
@@ -38,11 +33,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     const safeText = pdfText.length > MAX_CONTEXT_CHARS ? pdfText.slice(0, MAX_CONTEXT_CHARS) : pdfText;
 
-    // Model (env ile değiştirebilirsin): gemini-1.5-flash-latest hızlı/ucuz, pro daha kaliteli
     const model = process.env.GEMINI_MODEL || 'gemini-1.5-flash-latest';
     const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
 
-    // Promt şablonu: TR cevap, bağlam dışına çıkma
     const userPrompt = [
       `You are an expert assistant for question-answering over PDF content (ChatPDF).`,
       `Answer ONLY using the provided document context. If not found, reply exactly:`,
@@ -58,16 +51,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     ].join('\n');
 
     const payload = {
-      contents: [
-        {
-          role: 'user',
-          parts: [{ text: userPrompt }],
-        },
-      ],
-      generationConfig: {
-        temperature: 0.2,
-        maxOutputTokens: 1024,
-      },
+      contents: [{ role: 'user', parts: [{ text: userPrompt }] }],
+      generationConfig: { temperature: 0.2, maxOutputTokens: 1024 },
     };
 
     const upstream = await fetch(url, {
@@ -83,7 +68,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     const data = await upstream.json();
 
-    // Yanıtı çıkar (REST response şekli)
     const answer =
       data?.candidates?.[0]?.content?.parts?.[0]?.text ??
       (Array.isArray(data?.candidates?.[0]?.content?.parts)
@@ -91,10 +75,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         : '') ??
       '';
 
-    const finalText =
-      (typeof answer === 'string' && answer.trim().length > 0)
-        ? answer.trim()
-        : 'I could not find the answer in the provided document.';
+    const finalText = typeof answer === 'string' && answer.trim() ? answer.trim()
+      : 'I could not find the answer in the provided document.';
 
     return res.status(200).json({ answer: finalText });
   } catch (err: any) {
