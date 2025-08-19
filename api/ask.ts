@@ -1,85 +1,110 @@
-// api/ask.ts  – Vercel Serverless Function (typesız, her yerde çalışır)
+// api/ask.ts — Vercel Serverless Function (Node.js 20)
+// Düzeltmeler:
+// 1) Gemini generateContent çağrısı doğru "contents" yapısıyla gönderiliyor
+// 2) Hem GEMINI_API_KEY hem VITE_GEMINI_API_KEY destekleniyor
+// 3) Daha temiz CORS ve hata mesajları
 
-const MAX_CONTEXT_CHARS = 120_000;
+import { GoogleGenAI } from "@google/genai";
+import type { VercelRequest, VercelResponse } from "@vercel/node";
 
-// Basit CORS (farklı origin’de gerekebilir)
-function setCors(res: any) {
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+const MODEL = "gemini-2.5-flash";
+
+function setCors(res: VercelResponse) {
+  res.setHeader("Access-Control-Allow-Credentials", "true");
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader(
+    "Access-Control-Allow-Methods",
+    "GET,OPTIONS,PATCH,DELETE,POST,PUT"
+  );
+  res.setHeader(
+    "Access-Control-Allow-Headers",
+    "X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version"
+  );
 }
 
-export default async function handler(req: any, res: any) {
+export default async function handler(req: VercelRequest, res: VercelResponse) {
   setCors(res);
 
-  if (req.method === 'OPTIONS') return res.status(200).end();
-  if (req.method !== 'POST') {
-    res.setHeader('Allow', 'POST, OPTIONS');
-    return res.status(405).json({ error: 'Method Not Allowed' });
+  if (req.method === "OPTIONS") {
+    return res.status(200).end();
+  }
+  if (req.method !== "POST") {
+    return res.status(405).json({ error: "Method Not Allowed" });
   }
 
   try {
-    const apiKey = process.env.GEMINI_API_KEY;
-    if (!apiKey) {
-      return res.status(500).json({ error: 'Server misconfig: GEMINI_API_KEY missing' });
-    }
-
-    const body = typeof req.body === 'string' ? JSON.parse(req.body || '{}') : (req.body || {});
-    const { pdfText, question, docName } = body;
-
-    if (!pdfText || typeof pdfText !== 'string' || !question || typeof question !== 'string') {
-      return res.status(400).json({ error: 'Invalid payload: pdfText (string) and question (string) are required' });
-    }
-
-    const safeText = pdfText.length > MAX_CONTEXT_CHARS ? pdfText.slice(0, MAX_CONTEXT_CHARS) : pdfText;
-
-    const model = process.env.GEMINI_MODEL || 'gemini-1.5-flash-latest';
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
-
-    const userPrompt = [
-      `You are an expert assistant for question-answering over PDF content (ChatPDF).`,
-      `Answer ONLY using the provided document context. If not found, reply exactly:`,
-      `"I could not find the answer in the provided document."`,
-      ``,
-      `Document: ${docName || '(unnamed)'}`,
-      `--- DOCUMENT CONTEXT START ---`,
-      safeText,
-      `--- DOCUMENT CONTEXT END ---`,
-      ``,
-      `User's question: ${question}`,
-      `Answer in Turkish. Be concise and accurate. Cite page numbers if present in the context.`,
-    ].join('\n');
-
-    const payload = {
-      contents: [{ role: 'user', parts: [{ text: userPrompt }] }],
-      generationConfig: { temperature: 0.2, maxOutputTokens: 1024 },
+    const { pdfText, question, docName } = (req.body ?? {}) as {
+      pdfText?: string;
+      question?: string;
+      docName?: string;
     };
 
-    const upstream = await fetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json; charset=utf-8' },
-      body: JSON.stringify(payload),
-    });
-
-    if (!upstream.ok) {
-      const detail = await upstream.text().catch(() => '');
-      return res.status(502).json({ error: 'Gemini upstream error', status: upstream.status, detail });
+    if (!pdfText || !question) {
+      return res
+        .status(400)
+        .json({ error: "pdfText and question are required" });
     }
 
-    const data = await upstream.json();
+    // Hem server hem client isimlerini kontrol et (yerelde kurtarıcı olur)
+    const apiKey =
+      process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY;
+
+    if (!apiKey) {
+      console.error("[ask] Missing GEMINI_API_KEY");
+      return res
+        .status(500)
+        .json({ error: "Server configuration error - API key missing" });
+    }
+
+    const ai = new GoogleGenAI({ apiKey });
+
+    const prompt = `
+You are an intelligent assistant designed to help users understand a document.
+Answer ONLY using the text from the document below. If the answer cannot be found or inferred, reply exactly:
+"I could not find the answer in the provided document."
+Document name: "${docName || "(unknown)"}"
+
+DOCUMENT CONTEXT:
+---
+${pdfText}
+---
+
+USER'S QUESTION:
+${question}
+
+ASSISTANT'S ANSWER:
+`.trim();
+
+    // ÖNEMLİ: contents yapısı
+    const response = await ai.models.generateContent({
+      model: MODEL,
+      contents: [
+        {
+          role: "user",
+          parts: [{ text: prompt }],
+        },
+      ],
+    });
+
+    // Kütüphane sürümlerine göre text getter/değer farklı olabilir, ikisini de dene
+    const text =
+      (typeof (response as any).text === "function"
+        ? (response as any).text()
+        : (response as any).text) ||
+      (response as any).output_text ||
+      "";
 
     const answer =
-      data?.candidates?.[0]?.content?.parts?.[0]?.text ??
-      (Array.isArray(data?.candidates?.[0]?.content?.parts)
-        ? data.candidates[0].content.parts.map((p: any) => p?.text).filter(Boolean).join('\n')
-        : '') ??
-      '';
+      (typeof text === "string" ? text : String(text)).trim() ||
+      "I could not find the answer in the provided document.";
 
-    const finalText = typeof answer === 'string' && answer.trim() ? answer.trim()
-      : 'I could not find the answer in the provided document.';
-
-    return res.status(200).json({ answer: finalText });
+    return res.status(200).json({ answer });
   } catch (err: any) {
-    return res.status(500).json({ error: 'Internal error', detail: String(err?.message || err) });
+    console.error("[api/ask] error:", err);
+    return res.status(500).json({
+      error: "Upstream error",
+      message: err?.message ?? "Unknown error",
+      ...(process.env.NODE_ENV === "development" && { stack: err?.stack }),
+    });
   }
 }

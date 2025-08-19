@@ -1,5 +1,5 @@
 // services/geminiService.ts
-// Frontend sadece kendi backend'ine istek atar, API key tarayıcıya girmez.
+// Frontend yalnızca kendi backend'ine istek atar. API anahtarı tarayıcıya sızmaz.
 
 export async function generateChatResponse(
   context: string,
@@ -23,9 +23,10 @@ export async function generateChatResponse(
     }
 
     const data = await resp.json();
-    return data.answer?.trim().length
-      ? data.answer
-      : "I could not find the answer in the provided document.";
+    const txt =
+      (data?.answer ?? "").toString().trim() ||
+      "I could not find the answer in the provided document.";
+    return txt;
   } catch (err) {
     console.error("[Gemini] generateChatResponse error:", err);
     return "Sorry, I encountered an error while processing your request.";

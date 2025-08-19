@@ -1,4 +1,4 @@
-// App.tsx (Material UI, full-bleed layout + minimal kenar boşluğu)
+// App.tsx
 import React, { useCallback, useMemo, useRef, useState } from "react";
 import { parsePdf } from "./services/pdfParser";
 import { generateChatResponse } from "./services/geminiService";
@@ -100,7 +100,7 @@ const theme = createTheme({
   },
 });
 
-/** ---------- API Key ---------- **/
+/** ---------- (Opsiyonel) Sadece uyarı için okuyoruz ---------- **/
 function useGeminiKeyStatus() {
   const key = import.meta.env.VITE_GEMINI_API_KEY;
   return useMemo(
@@ -110,7 +110,7 @@ function useGeminiKeyStatus() {
 }
 
 export default function App() {
-  useGeminiKeyStatus(); // sadece kontrol ediliyor; görsel rozet kaldırıldı
+  useGeminiKeyStatus();
 
   const [docName, setDocName] = useState<string>("(no file)");
   const [pdfText, setPdfText] = useState<string>("");
@@ -143,9 +143,7 @@ export default function App() {
         setPdfText(safeText);
         pushMessage({
           role: "system",
-          content: `PDF "${file.name}" yüklendi. Toplam metin uzunluğu: ${safeText.length.toLocaleString(
-            "tr-TR"
-          )} karakter.`,
+          content: `PDF "${file.name}" yüklendi. Toplam metin uzunluğu: ${safeText.length.toLocaleString("tr-TR")} karakter.`,
         });
       } catch (e) {
         console.error(e);
@@ -226,9 +224,7 @@ export default function App() {
         }}
       />
 
-      {/* Full-bleed app shell: header | main | footer */}
       <Box sx={{ minHeight: "100vh", display: "grid", gridTemplateRows: "auto 1fr auto" }}>
-        {/* HEADER */}
         <AppBar position="sticky" color="transparent" elevation={0}>
           <Toolbar variant="dense">
             <Typography variant="h6" sx={{ fontWeight: 800 }}>
@@ -237,14 +233,7 @@ export default function App() {
           </Toolbar>
         </AppBar>
 
-        {/* MAIN */}
-        <Box
-          sx={{
-            px: { xs: 2, md: 3 },
-            py: 2,
-            width: "100%",
-          }}
-        >
+        <Box sx={{ px: { xs: 2, md: 3 }, py: 2, width: "100%" }}>
           <Box
             sx={{
               display: "grid",
@@ -394,7 +383,6 @@ export default function App() {
           </Box>
         </Box>
 
-        {/* FOOTER */}
         <Footer />
       </Box>
     </ThemeProvider>
