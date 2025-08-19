@@ -102,7 +102,7 @@ const theme = createTheme({
 
 /** ---------- API Key ---------- **/
 function useGeminiKeyStatus() {
-  const key = import.meta.env.VITE_GEMINI_API_KEY as string | undefined;
+  const key = import.meta.env.VITE_GEMINI_API_KEY;
   return useMemo(
     () => ({ key, valid: Boolean(key && key.trim().length > 10) }),
     [key]
@@ -237,15 +237,14 @@ export default function App() {
           </Toolbar>
         </AppBar>
 
-        {/* MAIN (her iki kenardan biraz boşluklu) */}
+        {/* MAIN */}
         <Box
           sx={{
-            px: { xs: 2, md: 3 },  // mobilde 16px, masaüstünde 24px boşluk
+            px: { xs: 2, md: 3 },
             py: 2,
             width: "100%",
           }}
         >
-          {/* Grid */}
           <Box
             sx={{
               display: "grid",

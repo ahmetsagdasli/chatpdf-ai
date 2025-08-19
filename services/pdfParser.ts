@@ -4,9 +4,9 @@ import {
   GlobalWorkerOptions,
   type PDFDocumentProxy,
 } from "pdfjs-dist";
-import PdfWorker from "pdfjs-dist/build/pdf.worker.mjs?worker";
 
-GlobalWorkerOptions.workerPort = new PdfWorker();
+// Vercel'de çalışacak şekilde worker'ı CDN'den yükle
+GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/4.4.168/pdf.worker.min.mjs`;
 
 export async function parsePdf(file: File): Promise<string> {
   const arrayBuffer = await file.arrayBuffer();
