@@ -1,4 +1,4 @@
-// types.ts  — tek tip kaynağı
+// src/types/index.ts — shared type source
 
 export type Role = "user" | "assistant" | "system";
 

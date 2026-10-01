@@ -1,4 +1,4 @@
-// services/pdfParser.ts
+// src/services/pdfParser.ts
 import {
   getDocument,
   GlobalWorkerOptions,

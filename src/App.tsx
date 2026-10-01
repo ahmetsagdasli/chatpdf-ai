@@ -19,8 +19,8 @@ import {
   GlobalStyles,
   createTheme,
 } from "@mui/material";
-import ChatView from "./components/ChatView";
-import Footer from "./components/Footer";
+import ChatView from "./components/ui/ChatView";
+import Footer from "./components/ui/Footer";
 
 export type Role = "user" | "assistant" | "system";
 export type Message = {

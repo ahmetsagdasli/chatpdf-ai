@@ -1,6 +1,6 @@
 // components/ChatView.tsx
 import React from "react";
-import type { ChatMessage } from "../types"; // konumuna göre ayarla: "@/types" da olabilir
+import type { ChatMessage } from "../../types";
 
 type Props = {
   messages: ChatMessage[];

@@ -7,14 +7,14 @@ grounded in the document.
 
 ## How it works
 
-1. **Upload** - `services/pdfParser.ts` reads the PDF client-side with `pdfjs-dist`
+1. **Upload** - `src/services/pdfParser.ts` reads the PDF client-side with `pdfjs-dist`
    and extracts its full text.
-2. **Chunk + retrieve** - `services/retrievalService.ts` splits the document into
+2. **Chunk + retrieve** - `src/services/retrievalService.ts` splits the document into
    overlapping ~512-word chunks and scores each chunk against the user's question
    using whole-word term-frequency matching with a keyword-coverage bonus. The
    top-scoring chunks are concatenated into a compact context (not the whole
    document, which keeps prompts small and the answer grounded).
-3. **Ask** - `services/geminiService.ts` POSTs `{ pdfText, question, docName }` to
+3. **Ask** - `src/services/geminiService.ts` POSTs `{ pdfText, question, docName }` to
    the app's own backend at `/api/ask`. The API key never reaches the browser.
 4. **Answer** - `api/ask.ts`, a Vercel serverless function, calls the Gemini API
    (`gemini-2.5-flash`) with a prompt that constrains the model to answer only
@@ -35,14 +35,24 @@ PDF file -> pdfParser.ts -> retrievalService.ts -> geminiService.ts -> /api/ask 
 ## Project structure
 
 ```
-components/        UI components (chat view, sidebar, message bubbles, icons, ...)
-services/
-  pdfParser.ts        Extracts text from an uploaded PDF
-  retrievalService.ts  Chunks text and ranks chunks by relevance to a query
-  geminiService.ts    Calls the backend /api/ask endpoint
 api/
   ask.ts              Serverless function that calls the Gemini API
-types.ts            Shared TypeScript types (ChatMessage, Document, Role)
+src/
+  components/
+    ui/                UI components (chat view, sidebar, message bubbles, icons, ...)
+  services/
+    pdfParser.ts       Extracts text from an uploaded PDF
+    retrievalService.ts  Chunks text and ranks chunks by relevance to a query
+    geminiService.ts   Calls the backend /api/ask endpoint
+  config/
+    constants.ts       Client configuration constants
+  data/
+    metadata.json      Application metadata
+  styles/              Global styles and the MUI theme
+  types/
+    index.ts           Shared TypeScript types (ChatMessage, Document, Role)
+  App.tsx
+  main.tsx             Vite entry point
 ```
 
 ## Running locally

@@ -11,7 +11,7 @@ import {
   Button,
   CircularProgress,
 } from "@mui/material";
-import type { Document } from "../types";
+import type { Document } from "../../types";
 import { FileIcon } from "./icons/FileIcon";
 import { PlusIcon } from "./icons/PlusIcon";
 import { FolderIcon } from "./icons/FolderIcon";

@@ -1,4 +1,4 @@
-// services/geminiService.ts
+// src/services/geminiService.ts
 // Frontend yalnızca kendi backend'ine istek atar. API anahtarı tarayıcıya sızmaz.
 
 export async function generateChatResponse(

@@ -17,16 +17,11 @@
     "noFallthroughCasesInSwitch": true,
     "baseUrl": ".",
     "paths": {
-      "@/*": ["./*"]
+      "@/*": ["./src/*"]
     }
   },
   "include": [
-    "index.tsx",
-    "vite-env.d.ts",
-    "*.ts",
-    "*.tsx",
-    "components/**/*",
-    "services/**/*",
+    "src/**/*",
     "api/**/*"
   ],
   "exclude": [
