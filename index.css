@@ -1,0 +1,111 @@
+/* index.css — modern, canlı tema (yeşil+mavi, mor vurgu) */
+:root{
+  --bg-1:#0b1220;   /* koyu lacivert taban */
+  --bg-2:#0f1a2e;
+  --g-green:#00e091;
+  --g-blue:#3b8bff;
+  --g-purple:#b36bff;
+
+  --text:#e8f0ff;
+  --muted:#c7d2fe;
+
+  --card-bg: linear-gradient(180deg, rgba(255,255,255,.12), rgba(255,255,255,.06));
+  --card-bd: 1px solid rgba(255,255,255,.12);
+  --shadow: 0 10px 30px rgba(0,0,0,.25);
+  --radius: 16px;
+}
+
+*{ box-sizing:border-box; }
+html,body,#root{ height:100%; }
+
+body{
+  margin:0;
+  color:var(--text);
+  font-family: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  background:
+    radial-gradient(900px 450px at 12% 12%, rgba(0,224,145,.22), transparent 60%),
+    radial-gradient(1100px 550px at 85% 18%, rgba(59,139,255,.22), transparent 60%),
+    radial-gradient(700px 400px at 70% 85%, rgba(179,107,255,.2), transparent 60%),
+    linear-gradient(180deg, var(--bg-1), var(--bg-2) 60%, #0b1220);
+}
+
+/* Uygulama kabuğu: header | içerik | footer */
+.app-shell{
+  min-height:100%;
+  display:grid;
+  grid-template-rows:auto 1fr auto;
+}
+
+/* Genel kaplar */
+.container{
+  width:min(1200px, 92vw);
+  margin:24px auto;
+  padding:0 8px;
+}
+
+/* Cam (glass) kart görünümü */
+.card, .glass{
+  background:var(--card-bg);
+  border:var(--card-bd);
+  border-radius:var(--radius);
+  box-shadow:var(--shadow);
+}
+
+/* Başlıklar */
+h1,h2,h3{ letter-spacing:-.02em; margin:0 0 10px; }
+h1{ font-weight:800; }
+h2,h3{ font-weight:700; }
+
+/* Butonlar (primary/ghost) */
+.btn{
+  border:none;
+  border-radius:14px;
+  padding:10px 16px;
+  font-weight:600;
+  cursor:pointer;
+}
+.btn-primary{
+  color:#0b1220;
+  background:linear-gradient(135deg, var(--g-green) 0%, var(--g-blue) 50%, var(--g-purple) 100%);
+}
+.btn-ghost{
+  color:var(--text);
+  background:rgba(255,255,255,.06);
+  border:1px solid rgba(255,255,255,.25);
+}
+
+/* Grid: sol (sidebar) + sağ (main) */
+.grid{
+  display:grid;
+  grid-template-columns: 300px 1fr;
+  gap:24px;
+}
+@media (max-width: 900px){
+  .grid{ grid-template-columns: 1fr; }
+}
+
+/* Scrollbar */
+::-webkit-scrollbar{ width:10px; height:10px; }
+::-webkit-scrollbar-thumb{
+  border-radius:10px;
+  background:linear-gradient(180deg, var(--g-blue), var(--g-purple));
+}
+::-webkit-scrollbar-track{ background:rgba(255,255,255,.06); }
+
+/* Link */
+a{ color:#9ec5ff; text-decoration:none; }
+a:hover{ text-decoration:underline; }
+
+/* Basit header şeridi (varsa AppBar yerine) */
+.header-bar{
+  backdrop-filter: blur(10px);
+  background:linear-gradient(90deg, rgba(0,224,145,.18), rgba(59,139,255,.18), rgba(179,107,255,.18));
+  border-bottom:1px solid rgba(255,255,255,.12);
+}
+
+/* Bölüm başlıkları */
+.section-title{
+  font-size:18px;
+  font-weight:700;
+  margin:0 0 12px;
+}

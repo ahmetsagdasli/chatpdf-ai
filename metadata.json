@@ -1,0 +1,5 @@
+{
+  "name": "ChatPDF AI",
+  "description": "An elegant AI-powered chat application that allows you to have a conversation with your PDF documents, providing instant answers and summaries.",
+  "requestFramePermissions": []
+}
